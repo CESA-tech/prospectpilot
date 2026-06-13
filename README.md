@@ -166,7 +166,9 @@ copy .env.example .env   # fill in your API keys
 
 ## Demo
 
-*Video walkthrough coming soon.*
+[![ProspectPilot Demo](https://img.shields.io/badge/Watch%20Demo-Loom-blue)](https://www.loom.com/share/46979ea855814e9797d9f963d3a6f68b)
+
+Full pipeline walkthrough: research → contact → draft → approve → send.
 
 ---
 
