@@ -15,6 +15,11 @@ __pycache__/
 *.db
 data/prospectpilot_backup.db
 
+# Internal docs (not for public repo)
+docs/project-log.md
+docs/roadmap.md
+docs/learning-notes.md
+
 # IDE
 .vscode/
 .idea/
