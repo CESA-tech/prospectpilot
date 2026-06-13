@@ -1,0 +1,29 @@
+{
+  "styles": [
+    {
+      "id": "pain_point",
+      "label": "Pain point odaklı",
+      "instruction": "Focus the email on the company's specific pain points from the research. Lead with their biggest challenge, then position your service as the solution."
+    },
+    {
+      "id": "momentum",
+      "label": "Momentum odaklı",
+      "instruction": "Lead with a recent win or milestone from the research (funding, launch, growth). Connect their momentum to a new operational challenge your service solves."
+    },
+    {
+      "id": "short",
+      "label": "Daha kısa (2-3 cümle)",
+      "instruction": "Rewrite the email in 2-3 sentences maximum. Keep only the single strongest hook. End with one direct question."
+    },
+    {
+      "id": "formal",
+      "label": "Resmi ton",
+      "instruction": "Use a more formal, professional tone. Avoid contractions and casual language. Keep it concise but corporate-appropriate."
+    },
+    {
+      "id": "curious",
+      "label": "Merak uyandıran",
+      "instruction": "Open with a counterintuitive insight or unexpected observation about the company. Make them curious enough to reply. Do not pitch directly — let the question do the work."
+    },
+  ]
+}
