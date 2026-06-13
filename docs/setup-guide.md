@@ -42,7 +42,7 @@ Başlamadan önce şunlar gerekli:
 ### GitHub'dan clone (önerilen)
 
 ```powershell
-git clone https://github.com/kullanici-adi/prospectpilot.git
+git clone https://github.com/CESA-tech/prospectpilot.git
 cd prospectpilot
 ```
 

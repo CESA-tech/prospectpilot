@@ -44,7 +44,7 @@ _Bu rehber, ProspectPilot'u bilgisayarına kurmak ve çalıştırmak için gerek
 Komut istemcisini aç (Windows arama → `cmd`) ve şunu çalıştır:
 
 ```
-git clone https://github.com/kullanici-adi/prospectpilot.git
+git clone https://github.com/CESA-tech/prospectpilot.git
 cd prospectpilot
 ```
 
