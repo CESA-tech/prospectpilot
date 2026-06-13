@@ -29,10 +29,12 @@ st.set_page_config(page_title="ProspectPilot", layout="wide")
 st.markdown("""
 <style>
     [data-testid="stStatusWidget"] { visibility: hidden; }
+    [data-testid="stAppDeployButton"] { display: none; }
+    [data-testid="stSelectbox"] input { pointer-events: none; caret-color: transparent; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("ProspectPilot")
+st.title("ProspectPilot", anchor=False)
 
 tab_new, tab_batch, tab_dashboard, tab_leads, tab_followup = st.tabs([
     "New Lead", "Batch Process", "Dashboard", "Leads", "Follow-ups"
@@ -79,9 +81,12 @@ with tab_new:
 
     # ── STEP 1: Company name ──────────────────────────────────────────────────
     if stage == "input":
-        st.subheader("Research a Company")
+        st.subheader("Research a Company", anchor=False)
         company = st.text_input("Company name", placeholder="e.g. Linear, Vercel, Notion")
-        if st.button("Research", type="primary", disabled=not company.strip()):
+        if st.button("Research", type="primary"):
+            if not company.strip():
+                st.warning("Please enter a company name.")
+                st.stop()
             st.session_state["nl_company"] = company.strip()
             st.session_state["nl_stage"] = "researching"
             st.rerun()
@@ -107,7 +112,7 @@ with tab_new:
         research = st.session_state["nl_research"]
         company = st.session_state["nl_company"]
 
-        st.subheader(f"{company} — Research Complete")
+        st.subheader(f"{company} — Research Complete", anchor=False)
 
         with st.expander("Research summary", expanded=False):
             st.write(research.get("summary", "—"))
@@ -134,7 +139,7 @@ with tab_new:
     # ── STEP 4: Select contact ────────────────────────────────────────────────
     elif stage == "contacts":
         domain = st.session_state["nl_domain"]
-        st.subheader("Select a Contact")
+        st.subheader("Select a Contact", anchor=False)
 
         if "nl_contacts" not in st.session_state:
             with st.spinner(f"Querying {domain}..."):
@@ -204,7 +209,7 @@ with tab_new:
         company = st.session_state["nl_company"]
         domain = st.session_state.get("nl_domain", "")
 
-        st.subheader(f"{company} — Draft Ready")
+        st.subheader(f"{company} — Draft Ready", anchor=False)
 
         col_left, col_right = st.columns([1, 1])
 
@@ -262,7 +267,10 @@ with tab_new:
                     st.warning("Style name and instruction cannot be empty.")
 
         with col_right:
-            st.write(f"**Subject:** {draft['subject']}")
+            edited_subject = st.text_input("Subject", value=draft["subject"], key="nl_subject")
+            if edited_subject != draft["subject"]:
+                st.session_state["nl_draft"] = {**draft, "subject": edited_subject}
+                draft = st.session_state["nl_draft"]
             edited_body = st.text_area("Body (editable)", value=draft["body"], height=300)
             if edited_body != draft["body"]:
                 st.session_state["nl_draft"] = {**draft, "body": edited_body}
@@ -308,7 +316,7 @@ with tab_new:
 # ── TAB 2: Batch Process ──────────────────────────────────────────────────────
 
 with tab_batch:
-    st.subheader("Batch Process from CSV")
+    st.subheader("Batch Process from CSV", anchor=False)
     st.caption("Research, contact finding, and draft writing run automatically for each company. Drafts appear in the Leads tab for your review.")
 
     uploaded = st.file_uploader("Upload CSV (must have 'company' and 'domain' columns)", type="csv")
@@ -379,13 +387,13 @@ with tab_dashboard:
 
     col_a, col_b = st.columns(2)
     with col_a:
-        st.subheader("Follow-up Status")
+        st.subheader("Follow-up Status", anchor=False)
         st.write(f"Pending: **{stats['fu_pending']}**")
         st.write(f"Completed: **{stats['fu_done']}**")
         st.write(f"Drafts: **{stats['draft']}**")
 
     with col_b:
-        st.subheader("Danger Zone")
+        st.subheader("Danger Zone", anchor=False)
         if st.button("Reset All Leads", type="secondary"):
             st.session_state["confirm_reset"] = True
 
@@ -440,27 +448,35 @@ with tab_leads:
 
             left, right = st.columns([1, 1])
             with left:
-                st.subheader(lead.company_name)
+                st.subheader(lead.company_name, anchor=False)
                 st.write(f"**Contact:** {lead.contact_name or '—'} — {lead.contact_email or '—'}")
                 st.write(f"**Status:** `{lead.status}`")
                 if lead.sent_at:
                     st.write(f"**Sent:** {days_ago(lead.sent_at)}")
                     st.write(f"**Follow-up:** {lead.follow_up_count or 0}/2")
             with right:
-                st.write(f"**Subject:** {lead.draft_subject or '—'}")
-                st.text_area("Body", value=lead.draft_body or "—", height=200,
-                             disabled=True, label_visibility="collapsed")
+                edited_subject = st.text_input("Subject", value=lead.draft_subject or "", key=f"leads_subject_{lead.id}")
+                edited_body = st.text_area("Body", value=lead.draft_body or "", height=200, key=f"leads_body_{lead.id}")
 
             st.divider()
-            b1, b2, b3 = st.columns([1, 1, 4])
+            b1, b2, b3, b4 = st.columns([1, 1, 1, 3])
+
+            if b1.button("Save Changes", key="leads_save"):
+                with Session() as session:
+                    db_lead = session.get(Lead, lead.id)
+                    db_lead.draft_subject = edited_subject
+                    db_lead.draft_body = edited_body
+                    session.commit()
+                st.success("Saved.")
+                st.rerun()
 
             if lead.status == "draft":
-                if b1.button("Approve & Send", type="primary", key="leads_send"):
+                if b2.button("Approve & Send", type="primary", key="leads_send"):
                     if not lead.contact_email:
                         st.error("No recipient email.")
                     else:
                         with st.spinner("Sending..."):
-                            ok = send_email(lead.contact_email, lead.draft_subject, lead.draft_body)
+                            ok = send_email(lead.contact_email, edited_subject, edited_body)
                         if ok:
                             update_status(lead.id, "sent")
                             st.success(f"Sent → {lead.contact_email}")
@@ -469,12 +485,12 @@ with tab_leads:
                             st.error("Failed to send.")
 
             if lead.status == "sent":
-                if b1.button("Mark as Replied", type="primary", key="leads_replied"):
+                if b2.button("Mark as Replied", type="primary", key="leads_replied"):
                     update_status(lead.id, "replied")
                     st.success("Marked as replied.")
                     st.rerun()
 
-            if b2.button("Delete", key="leads_delete"):
+            if b3.button("Delete", key="leads_delete"):
                 st.session_state[f"del_{lead.id}"] = True
 
             if st.session_state.get(f"del_{lead.id}"):
@@ -508,7 +524,7 @@ with tab_followup:
             st.info("No new replies.")
 
     st.divider()
-    st.subheader("Due for Follow-up")
+    st.subheader("Due for Follow-up", anchor=False)
     due = get_due_for_followup()
 
     if not due:
